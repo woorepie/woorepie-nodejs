@@ -1,0 +1,27 @@
+{
+  "name": "woorepie-nodejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/woorepie/woorepie-nodejs.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/woorepie/woorepie-nodejs/issues"
+  },
+  "homepage": "https://github.com/woorepie/woorepie-nodejs#readme",
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "ethers": "^6.13.7",
+    "kafkajs": "^2.2.4",
+    "mongoose": "^8.14.1"
+  }
+}
