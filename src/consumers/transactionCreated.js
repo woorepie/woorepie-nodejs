@@ -1,19 +1,14 @@
-import { Kafka } from 'kafkajs';
 import { processTransaction } from '../services/transactionService.js';
 import { sendToDLQ } from '../producers/dlqProducer.js';
+import { kafka, CONSUMER_GROUPS, TOPICS } from '../config/kafka.js';
 
 async function consumeTransactionCreated() {
-  const kafka = new Kafka({ 
-    brokers: [process.env.KAFKA_BROKER],
-    clientId: 'transaction-processor'
-  });
-  
-  const consumer = kafka.consumer({ 
-    groupId: 'transaction-processor'
+  const consumer = kafka.transactionProcessor.consumer({ 
+    groupId: CONSUMER_GROUPS.TRANSACTION_PROCESSOR
   });
 
   await consumer.connect();
-  await consumer.subscribe({ topic: 'transaction.created', fromBeginning: false });
+  await consumer.subscribe({ topic: TOPICS.TRANSACTION_CREATED, fromBeginning: false });
 
   await consumer.run({
     eachMessage: async ({ message }) => {

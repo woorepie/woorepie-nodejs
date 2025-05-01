@@ -1,6 +1,6 @@
 // src/utils/crypto.js
 import crypto from 'crypto';
-const dotenv = require('dotenv');
+import dotenv from 'dotenv';
 
 dotenv.config();
 

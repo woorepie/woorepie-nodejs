@@ -1,7 +1,7 @@
-import 'dotenv/config';
+import config from '../src/config/env.js';
 import mongoose from 'mongoose';
 
-mongoose.connect(process.env.MONGODB_URI)
+mongoose.connect(config.MONGODB_URI)
     .then(() => {
         console.log('MongoDB 연결 성공');
         process.exit(0);

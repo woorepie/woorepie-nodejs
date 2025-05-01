@@ -1,5 +1,5 @@
 // src/index.js
-import 'dotenv/config';
+import config from './config/env.js';
 import mongoose from 'mongoose';
 import consumeUserCreated from './consumers/userCreated.js';
 import consumeTransactionCreated from './consumers/transactionCreated.js';
@@ -7,7 +7,7 @@ import consumeTransactionCreated from './consumers/transactionCreated.js';
 async function main() {
     try {
         // MongoDB 연결
-        await mongoose.connect(process.env.MONGODB_URI);
+        await mongoose.connect(config.MONGODB_URI);
         console.log('MongoDB 연결 성공');
 
         // 지갑 생성 Consumer 시작 (순서성 불필요)

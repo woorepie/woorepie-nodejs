@@ -1,18 +1,13 @@
-import { Kafka } from 'kafkajs';
+import { kafka, TOPICS } from '../config/kafka.js';
 
-const kafka = new Kafka({
-  brokers: [process.env.KAFKA_BROKER],
-  clientId: 'notification-producer'
-});
-
-const producer = kafka.producer();
+const producer = kafka.notificationProducer.producer();
 
 export const sendNotification = async (notification) => {
   try {
     await producer.connect();
 
     await producer.send({
-      topic: 'user.notification',
+      topic: TOPICS.USER_NOTIFICATION,
       messages: [
         {
           value: JSON.stringify(notification)
