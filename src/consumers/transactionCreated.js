@@ -1,29 +1,58 @@
 import { processTransaction } from '../services/transactionService.js';
-import { sendToDLQ } from '../producers/dlqProducer.js';
 import { kafka, CONSUMER_GROUPS, TOPICS } from '../config/kafka.js';
+import { 
+  handleKafkaMessage, 
+  getConsumerConfig, 
+  handleConsumerError,
+  validatePayload,
+  validateNumber,
+  validateEnum
+} from '../utils/errorHandler.js';
+
+// 트랜잭션 검증 함수
+const validateTransaction = (payload) => {
+  validatePayload(payload, ['user_id', 'transaction_type', 'amount'], {
+    amount: (value) => validateNumber(value, 'amount'),
+    transaction_type: (value) => validateEnum(value, 'transaction_type', ['DEPOSIT', 'WITHDRAWAL'])
+  });
+};
 
 async function consumeTransactionCreated() {
-  const consumer = kafka.transactionProcessor.consumer({ 
-    groupId: CONSUMER_GROUPS.TRANSACTION_PROCESSOR
-  });
+  const consumer = kafka.transactionProcessor.consumer(getConsumerConfig(CONSUMER_GROUPS.TRANSACTION_PROCESSOR));
+  console.log('Creating consumer with group:', CONSUMER_GROUPS.TRANSACTION_PROCESSOR);
+  try {
+    await consumer.connect();
+    await consumer.subscribe({ topic: TOPICS.TRANSACTION_CREATED, fromBeginning: false });
 
-  await consumer.connect();
-  await consumer.subscribe({ topic: TOPICS.TRANSACTION_CREATED, fromBeginning: false });
+    await consumer.run({
+      eachMessage: async ({ message }) => {
+        await handleKafkaMessage(message, async (payload) => {
+          // 페이로드 검증
+          validateTransaction(payload);
+          
+          // 트랜잭션 처리
+          console.log(`Processing transaction for user ${payload.user_id}`);
+          await processTransaction(payload);
+          console.log(`Transaction processed successfully for user ${payload.user_id}`);
+        });
+      },
+    });
 
-  await consumer.run({
-    eachMessage: async ({ message }) => {
-      const payload = JSON.parse(message.value.toString());
-      console.log(`Processing transaction for user ${payload.user_id}`);
-      
+    // 종료 시그널 처리
+    process.on('SIGTERM', async () => {
       try {
-        await processTransaction(payload);
-        console.log(`Transaction processed successfully for user ${payload.user_id}`);
-      } catch (error) {
-        console.error(`Error processing transaction for user ${payload.user_id}:`, error);
-        await sendToDLQ('transaction.created', message.value.toString(), error);
+        console.log('Disconnecting consumer...');
+        await consumer.disconnect();
+        console.log('Consumer disconnected');
+      } catch (e) {
+        console.error('Error during consumer disconnect:', e);
       }
-    },
-  });
+      process.exit(0);
+    });
+
+  } catch (error) {
+    handleConsumerError(error, 'transaction', consumeTransactionCreated);
+  }
 }
 
 export default consumeTransactionCreated; 
