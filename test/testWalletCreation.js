@@ -1,7 +1,8 @@
-const mongoose = require('mongoose');
-const walletService = require('../src/services/walletService');
-const connectDB = require('../src/config/database');
-const readline = require('readline');
+import config from '../src/config/env.js';
+import mongoose from 'mongoose';
+import readline from 'readline';
+import { createWallet } from '../src/services/walletService.js';
+
 
 // readline 인터페이스 생성
 const rl = readline.createInterface({
@@ -12,7 +13,7 @@ const rl = readline.createInterface({
 async function createWalletForUser(userId) {
     try {
         console.log(`사용자 ${userId}를 위한 지갑 생성 중...`);
-        await walletService.createWallet(userId);
+        await createWallet(userId);
         console.log('지갑 생성이 완료되었습니다!');
     } catch (error) {
         console.error('지갑 생성 중 오류 발생:', error);
@@ -22,7 +23,7 @@ async function createWalletForUser(userId) {
 async function main() {
     try {
         // MongoDB 연결
-        await connectDB();
+        mongoose.connect(config.MONGODB_URI);
         console.log('MongoDB 연결 성공');
 
         // 사용자 입력을 받는 함수
