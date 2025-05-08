@@ -11,9 +11,9 @@ import {
 
 // 트랜잭션 검증 함수
 const validateTransaction = (payload) => {
-  validatePayload(payload, ['user_id', 'transaction_type', 'amount'], {
-    amount: (value) => validateNumber(value, 'amount'),
-    transaction_type: (value) => validateEnum(value, 'transaction_type', ['DEPOSIT', 'WITHDRAWAL'])
+  validatePayload(payload, ['estate_id', 'trade_id', 'buyer_id', 'seller_id', 'token_price', 'trade_token_amount', 'trade_date'], {
+    token_price: (value) => validateNumber(value, 'token_price'),
+    trade_token_amount: (value) => validateNumber(value, 'trade_token_amount'),
   });
 };
 
@@ -28,7 +28,7 @@ async function consumeTransactionCreated() {
       eachMessage: async ({ message }) => {
         await handleKafkaMessage(message, async (payload) => {
           // 페이로드 검증
-          validateTransaction(payload);
+          // validateTransaction(payload);
           
           // 트랜잭션 처리
           console.log(`Processing transaction for user ${payload.user_id}`);
