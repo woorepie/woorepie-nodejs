@@ -30,5 +30,6 @@ export default {
     NODE_ENV: process.env.NODE_ENV,
     SLACK_WEBHOOK_URL: process.env.SLACK_WEBHOOK_URL,
     MONGODB_URI: process.env.MONGODB_URI,
-    KAFKA_BROKER: process.env.KAFKA_BROKER
+    KAFKA_BROKER: process.env.KAFKA_BROKER,
+    AMOY_RPC_URL: process.env.AMOY_RPC_URL
 } 

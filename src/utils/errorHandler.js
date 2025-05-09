@@ -38,6 +38,28 @@ export const validateEnum = (value, field, allowedValues) => {
   }
 };
 
+// 날짜 검증
+export const validateDate = (value, fieldName) => {
+  if (!value) {
+    throw new Error(`${fieldName}는 필수 값입니다.`);
+  }
+
+  let date;
+  if (value instanceof Date) {
+    date = value;
+  } else if (typeof value === 'string') {
+    date = new Date(value);
+  } else {
+    throw new Error(`${fieldName}는 유효한 날짜 형식이어야 합니다.`);
+  }
+
+  if (isNaN(date.getTime())) {
+    throw new Error(`${fieldName}는 유효한 날짜 형식이어야 합니다.`);
+  }
+
+  return date;
+};
+
 // 에러 알림 전송 함수
 const sendErrorNotification = async (topic, message, error, userId = 'unknown') => {
   try {
