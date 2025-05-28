@@ -10,7 +10,7 @@ import config from '../config/env.js';
 /**
  * 코인을 발행하는 함수
  * @param {Object} payload - 코인 발행 데이터
- * @param {number} payload.user_id - 사용자 ID
+ * @param {number} payload.customer_id - 사용자 ID
  * @param {number} payload.estate_id - 체인 ID
  * @param {number} payload.amount - 발행할 코인 수량
  * @param {date} payload.date - 발행 일자
@@ -18,10 +18,10 @@ import config from '../config/env.js';
  */
 export const issueCoin = async (payload) => {
   try {
-    const { user_id, estate_id, amount, date } = payload;
+    const { customer_id, estate_id, amount, date } = payload;
 
     // 지갑 정보 조회
-    const wallet = await WalletModel.findOne({ user_id });
+    const wallet = await WalletModel.findOne({ customer_id });
     if (!wallet) {
       throw new Error('Wallet not found');
     }
@@ -34,7 +34,7 @@ export const issueCoin = async (payload) => {
 
     // 코인 발행 기록 생성
     const coin = await CoinModel.create({
-      user_id,
+      customer_id,
       estate_id,
       amount,
       date,
@@ -42,7 +42,7 @@ export const issueCoin = async (payload) => {
     });
 
     const metadata = {
-      user_id,
+      customer_id,
       estate_id,
       date: date.toISOString(),
     };

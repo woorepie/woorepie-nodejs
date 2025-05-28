@@ -11,8 +11,8 @@ import {
 
 // 코인 발행 검증 함수
 const validateCoinIssue = (payload) => {
-  validatePayload(payload, ['user_id', 'chain_id', 'amount'], {
-    user_id: (value) => validateString(value, 'user_id'),
+  validatePayload(payload, ['customer_id', 'chain_id', 'amount'], {
+    customer_id: (value) => validateString(value, 'customer_id'),
     // chain_id: (value) => validateString(value, 'chain_id'),
     estate_id: (value) => validateNumber(value, 'estate_id'),
     amount: (value) => validateNumber(value, 'amount'),
@@ -35,9 +35,9 @@ async function consumeCoinIssue() {
           validateCoinIssue(payload);
           
           // 코인 발행 처리
-          console.log(`유저  ${payload.user_id}에 대해 ${payload.estate_id} 매물 청약 중`);
+          console.log(`유저  ${payload.customer_id}에 대해 ${payload.estate_id} 매물 청약 중`);
           await issueCoin(payload);
-          console.log(`청약 완료. 유저 아이디 : ${payload.user_id}`);
+          console.log(`청약 완료. 유저 아이디 : ${payload.customer_id}`);
         });
       },
     });

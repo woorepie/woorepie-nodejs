@@ -4,7 +4,7 @@ import config from './env.js';
 // Kafka 인스턴스 생성 함수
 export const createKafkaInstance = (clientId) => {
   return new Kafka({
-    brokers: [config.KAFKA_BROKER],
+    brokers: config.KAFKA_BROKER.split(','),
     clientId
   });
 };
@@ -27,7 +27,7 @@ export const CONSUMER_GROUPS = {
 
 // 토픽 이름 상수
 export const TOPICS = {
-  USER_CREATED: 'user.created',
+  USER_CREATED: 'customer.created',
   TRANSACTION_CREATED: 'transaction.created',
   SUBSCRIPTION_CREATED: 'subscription.created',
   USER_NOTIFICATION: 'user.notification'

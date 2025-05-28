@@ -5,7 +5,7 @@ import { decryptKey } from '../utils/crypto.js';
 import { ethers } from 'ethers';
 import { parseUnits } from 'ethers';
 import config from '../config/env.js';
-import tokenArtifact from "../../artifacts/WooreToken.json" assert { type: "json" };
+import tokenArtifact from "../../artifacts/WooreToken.json" with { type: "json" };
 import TransferModel from '../models/transfer.js';
 /*
 	estate_id : ???,
