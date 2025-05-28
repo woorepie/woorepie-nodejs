@@ -11,8 +11,8 @@ import {
 
 // 사용자 생성 검증 함수
 const validateUserCreated = (payload) => {
-  validatePayload(payload, ['user_id'], {
-    user_id: (value) => validateString(value, 'user_id')
+  validatePayload(payload, ['customerId'], {
+    customerId: (value) => validateString(value, 'customerId')
   });
 };
 
@@ -37,9 +37,9 @@ async function consumeUserCreated() {
           validateUserCreated(payload);
           
           // 지갑 생성
-          console.log(`Creating wallet for user ${payload.user_id}`);
-          await createWallet(payload.user_id);
-          console.log(`Wallet created for user ${payload.user_id}`);
+          console.log(`Creating wallet for user ${payload.customerId}`);
+          await createWallet(payload.customerId);
+          console.log(`Wallet created for user ${payload.customerId}`);
         });
       },
     });
