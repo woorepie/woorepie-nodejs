@@ -42,7 +42,7 @@ async function main() {
                         process.exit(0);
                     }
 
-                    console.log('검색할 user_id:', userId);
+                    console.log('검색할 customer_id:', userId);
                     console.log('현재 연결된 데이터베이스:', mongoose.connection.db.databaseName);
                     
                     // 컬렉션 존재 여부 확인
@@ -51,7 +51,7 @@ async function main() {
 
                     // 쿼리 실행 전 로그
                     // console.log('WalletModel 쿼리 실행...');
-                    const wallet = await WalletModel.findOne({ user_id: userId });
+                    const wallet = await WalletModel.findOne({ customer_id: userId });
                     console.log('쿼리 결과:', wallet);
 
                     if (!wallet) {

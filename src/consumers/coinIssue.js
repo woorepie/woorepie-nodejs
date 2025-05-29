@@ -1,4 +1,4 @@
-import { issueCoin } from '../services/coinService.js';
+import { issueCoin } from '../services/issueService.js';
 import { kafka, CONSUMER_GROUPS, TOPICS } from '../config/kafka.js';
 import { 
   handleKafkaMessage, 
@@ -26,18 +26,33 @@ async function consumeCoinIssue() {
   
   try {
     await consumer.connect();
-    await consumer.subscribe({ topic: TOPICS.COIN_ISSUE, fromBeginning: false });
+    await consumer.subscribe({ topic: TOPICS.SUBSCRIPTION_CREATED, fromBeginning: false });
 
     await consumer.run({
       eachMessage: async ({ message }) => {
         await handleKafkaMessage(message, async (payload) => {
-          // 페이로드 검증
-          validateCoinIssue(payload);
-          
-          // 코인 발행 처리
-          console.log(`유저  ${payload.customer_id}에 대해 ${payload.estate_id} 매물 청약 중`);
-          await issueCoin(payload);
-          console.log(`청약 완료. 유저 아이디 : ${payload.customer_id}`);
+          if (Array.isArray(payload.customer)) {
+            for (const c of payload.customer) {
+              try {
+                await issueCoin({
+                  customer_id: c.customer_id,
+                  estate_id: payload.estate_id,
+                  amount: c.trade_token_amount,
+                  token_price: c.token_price,
+                  date: new Date(),
+                });
+                console.log(`청약 완료. 유저 아이디 : ${c.customer_id}`);
+              } catch (err) {
+                console.error(`청약 실패. 유저 아이디 : ${c.customer_id}`, err);
+                // 필요시 DLQ, 알림 등 추가
+              }
+            }
+          } else {
+            // 단일 청약 메시지 처리
+            validateCoinIssue(payload);
+            await issueCoin(payload);
+            console.log(`청약 완료. 유저 아이디 : ${payload.customer_id}`);
+          }
         });
       },
     });

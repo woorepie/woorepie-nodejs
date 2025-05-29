@@ -113,8 +113,8 @@ export const handleKafkaMessage = async (message, handler) => {
     await sendToDLQ(topic, message.value.toString(), error);
     
     // 에러 알림 전송
-    const userId = payload?.user_id || 'unknown';
-    await sendErrorNotification(topic, message.value.toString(), error, userId);
+    const customer_id = payload?.customer_id || 'unknown';
+    await sendErrorNotification(topic, message.value.toString(), error, customer_id);
   }
 };
 
