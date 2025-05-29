@@ -1,9 +1,10 @@
 import mongoose from 'mongoose';
 
 const CoinSchema = new mongoose.Schema({
-  user_id: Number,
+  customer_id: Number,
   estate_id: Number,
   amount: Number,
+  token_price: Number,
   date: Date,
   status: {
     type: String,

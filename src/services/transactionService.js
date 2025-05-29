@@ -34,17 +34,17 @@ export async function processTransaction(payload) {
     try {
         const { estate_id, trade_id, buyer_id, seller_id, token_price, trade_token_amount, trade_date } = payload;
         
-        const buyer_wallet = await WalletModel.findOne({ user_id: buyer_id });
-        const seller_wallet = await WalletModel.findOne({ user_id: seller_id });
+        const buyer_wallet = await WalletModel.findOne({ customer_id: buyer_id });
+        const seller_wallet = await WalletModel.findOne({ customer_id: seller_id });
         const contract = await ContractModel.findOne({ estate_id : estate_id });
         
         console.log('Found wallets:', {
             buyer_wallet: buyer_wallet ? {
-                user_id: buyer_wallet.user_id,
+                customer_id: buyer_wallet.customer_id,
                 wallet_address: buyer_wallet.wallet_address
             } : null,
             seller_wallet: seller_wallet ? {
-                user_id: seller_wallet.user_id,
+                customer_id: seller_wallet.customer_id,
                 wallet_address: seller_wallet.wallet_address
             } : null
         });

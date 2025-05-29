@@ -14,11 +14,12 @@ import config from '../config/env.js';
  * @param {number} payload.estate_id - 체인 ID
  * @param {number} payload.amount - 발행할 코인 수량
  * @param {date} payload.date - 발행 일자
+ * @param {number} payload.token_price - 코인 가격
  * @returns {Promise<Object>} - 발행된 코인 정보
  */
 export const issueCoin = async (payload) => {
   try {
-    const { customer_id, estate_id, amount, date } = payload;
+    const { customer_id, estate_id, amount, date, token_price } = payload;
 
     // 지갑 정보 조회
     const wallet = await WalletModel.findOne({ customer_id });
@@ -38,12 +39,14 @@ export const issueCoin = async (payload) => {
       estate_id,
       amount,
       date,
+      token_price,
       status: 'PENDING'
     });
 
     const metadata = {
       customer_id,
       estate_id,
+      token_price,
       date: date.toISOString(),
     };
     
@@ -56,7 +59,7 @@ export const issueCoin = async (payload) => {
       const token = new ethers.Contract(tokenAddress, tokenArtifact.abi, wallet);
       const receiver = wallet.address;
 
-      const amount = parseUnits(amount, 18); // 10^18 단위
+      const amountParsed = parseUnits(amount, 18); // 10^18 단위
       const data = ethers.encodeBytes32String(JSON.stringify(metadata));
 //32KB 이상 저장 시 가스비 비싸짐.
 
@@ -64,11 +67,10 @@ export const issueCoin = async (payload) => {
         await token.setIssuable(true);
       }
 
-      const tx = await token.issue(receiver, amount, data);
+      const tx = await token.issue(receiver, amountParsed, data);
       await tx.wait();
 
-      console.log(`토큰 ${amount}개를 ${receiver}에게 발행 성공`);
-
+      console.log(`토큰 ${amountParsed}개를 ${receiver}에게 발행 성공`);
 
       await CoinModel.findByIdAndUpdate(coin._id, {
         status: 'ISSUED',

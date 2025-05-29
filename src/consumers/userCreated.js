@@ -33,13 +33,8 @@ async function consumeUserCreated() {
     await consumer.run({
       eachMessage: async ({ message }) => {
         await handleKafkaMessage(message, async (payload) => {
-          // 페이로드 검증
-          validateUserCreated(payload);
-          
-          // 지갑 생성
-          console.log(`Creating wallet for user ${payload.customerId}`);
-          await createWallet(payload.customerId);
-          console.log(`Wallet created for user ${payload.customerId}`);
+          // payload: { customer_id, customer_kyc, customer_identification_url }
+          await createWallet(payload.customer_id, payload.customer_kyc, payload.customer_identification_url);
         });
       },
     });

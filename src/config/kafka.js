@@ -29,6 +29,6 @@ export const CONSUMER_GROUPS = {
 export const TOPICS = {
   USER_CREATED: 'customer.created',
   TRANSACTION_CREATED: 'transaction.created',
-  SUBSCRIPTION_CREATED: 'subscription.created',
+  SUBSCRIPTION_CREATED: 'subscription.accepted',
   USER_NOTIFICATION: 'user.notification'
 }; 
