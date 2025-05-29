@@ -38,7 +38,7 @@ async function consumeCoinIssue() {
                   customer_id: c.customer_id,
                   estate_id: payload.estate_id,
                   amount: c.trade_token_amount,
-                  token_price: c.token_price,
+                  token_price: payload.token_price,
                   date: new Date(),
                 });
                 console.log(`청약 완료. 유저 아이디 : ${c.customer_id}`);
