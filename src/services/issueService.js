@@ -1,10 +1,11 @@
 import CoinModel from '../models/issue.js';
 import WalletModel from '../models/wallet.js';
 import ContractModel from '../models/contract.js';
-import { ethers } from 'hardhat';
+import { ethers } from 'ethers';
 import { parseUnits } from 'ethers';
-const tokenArtifact = require("../artifacts/WoooreToken.json");
+import tokenArtifact from "../../artifacts/WooreToken.json" with { type: "json" };
 import config from '../config/env.js';
+import { keccak256, toUtf8Bytes } from 'ethers';
 
 
 /**
@@ -22,16 +23,16 @@ export const issueCoin = async (payload) => {
     const { customer_id, estate_id, amount, date, token_price } = payload;
 
     // 지갑 정보 조회
-    const wallet = await WalletModel.findOne({ customer_id });
-    if (!wallet) {
+    const issueWallet = await WalletModel.findOne({ customer_id });
+    if (!issueWallet) {
       throw new Error('Wallet not found');
     }
 
-    const contract_id = await ContractModel.findOne({ estate_id });
-
-    if (!contract_id) {
+    const contractDoc = await ContractModel.findOne({ estate_id });
+    if (!contractDoc) {
       throw new Error('Contract not found');
     }
+    const tokenAddress = contractDoc.contract_address;
 
     // 코인 발행 기록 생성
     const coin = await CoinModel.create({
@@ -52,15 +53,19 @@ export const issueCoin = async (payload) => {
     
 
     try {
-      // 임시로 성공했다고 가정하고 상태 업데이트
       const provider = new ethers.JsonRpcProvider(config.AMOY_RPC_URL);
-      const wallet = new ethers.Wallet(config.DEPLOYER_PRIVATE_KEY, provider);
-      const tokenAddress = contract_id;
+      const privateKey = config.PRIVATE_KEY;
+      const wallet = new ethers.Wallet(privateKey, provider);
       const token = new ethers.Contract(tokenAddress, tokenArtifact.abi, wallet);
-      const receiver = wallet.address;
+      const receiver = issueWallet.wallet_address;
 
-      const amountParsed = parseUnits(amount, 18); // 10^18 단위
-      const data = ethers.encodeBytes32String(JSON.stringify(metadata));
+      const amountParsed = parseUnits(String(amount), 18); // 10^18 단위
+      const dataString = JSON.stringify(metadata);
+      const byteLength = Buffer.byteLength(dataString, 'utf8');
+      console.log('dataString:', dataString, '| byteLength:', byteLength);
+      const hash = keccak256(toUtf8Bytes(dataString));
+      console.log('metadata hash:', hash);
+      const data = hash;
 //32KB 이상 저장 시 가스비 비싸짐.
 
       if (!await token.isIssuable()) {

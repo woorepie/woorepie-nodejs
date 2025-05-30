@@ -33,8 +33,9 @@ async function consumeUserCreated() {
     await consumer.run({
       eachMessage: async ({ message }) => {
         await handleKafkaMessage(message, async (payload) => {
+          console.log('Received payload:', payload);
           // payload: { customer_id, customer_kyc, customer_identification_url }
-          await createWallet(payload.customer_id, payload.customer_kyc, payload.customer_identification_url);
+          await createWallet(payload.customerId, payload.customerKyc, payload.customerIdentificationUrl);
         });
       },
     });

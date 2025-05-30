@@ -65,7 +65,10 @@ async function startNotificationConsumer() {
 
     await consumer.run({
       eachMessage: async ({ message }) => {
-        await handleKafkaMessage(message, processDLQMessage);
+        await handleKafkaMessage(message, (payload) => {
+          console.log('Received payload:', payload);
+          return processDLQMessage(payload);
+        });
       }
     });
 
