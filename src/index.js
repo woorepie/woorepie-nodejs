@@ -27,6 +27,7 @@ function startHealthServer() {
 async function main() {
     try {
         // MongoDB 연결
+        console.log('process.env.MONGODB_URI', process.env.MONGODB_URI);
         await mongoose.connect(process.env.MONGODB_URI);
         console.log('MongoDB 연결 성공');
 
