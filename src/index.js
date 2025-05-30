@@ -4,6 +4,7 @@ import http from 'http';
 import mongoose from 'mongoose';
 import consumeUserCreated from './consumers/userCreated.js';
 import consumeTransactionCreated from './consumers/transactionCreated.js';
+import consumeCoinIssue from './consumers/coinIssue.js';
 
 
 /** 헬스체크용 HTTP 서버 */
@@ -38,6 +39,10 @@ async function main() {
         // 거래 처리 Consumer 시작 (순서성 필요)
         console.log('거래 처리 Consumer 시작...');
         await consumeTransactionCreated();
+        
+        // 청약(코인 발행) Consumer 시작
+        console.log('청약(코인 발행) Consumer 시작...');
+        await consumeCoinIssue();
         
         // 프로그램이 계속 실행되도록 유지
         process.on('SIGINT', async () => {

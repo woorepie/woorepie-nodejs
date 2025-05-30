@@ -7,6 +7,7 @@ import { parseUnits } from 'ethers';
 import config from '../config/env.js';
 import tokenArtifact from "../../artifacts/WooreToken.json" with { type: "json" };
 import TransferModel from '../models/transfer.js';
+import { keccak256, toUtf8Bytes } from 'ethers';
 /*
 	estate_id : ???,
 	trade_id : ???,
@@ -32,11 +33,11 @@ import TransferModel from '../models/transfer.js';
  */
 export async function processTransaction(payload) {
     try {
-        const { estate_id, trade_id, buyer_id, seller_id, token_price, trade_token_amount, trade_date } = payload;
+        const { estateId, tradeId, buyerId, sellerId, tokenPrice, tradeTokenAmount, tradeDate } = payload;
         
-        const buyer_wallet = await WalletModel.findOne({ customer_id: buyer_id });
-        const seller_wallet = await WalletModel.findOne({ customer_id: seller_id });
-        const contract = await ContractModel.findOne({ estate_id : estate_id });
+        const buyer_wallet = await WalletModel.findOne({ customer_id: buyerId });
+        const seller_wallet = await WalletModel.findOne({ customer_id: sellerId });
+        const contract = await ContractModel.findOne({ estate_id : estateId });
         
         console.log('Found wallets:', {
             buyer_wallet: buyer_wallet ? {
@@ -68,23 +69,23 @@ export async function processTransaction(payload) {
         const seller_private_key = decryptKey(seller_wallet.encrypted_key);
   
         const transfer = await TransferModel.create({
-            trade_id,
-            estate_id,
-            buyer_id,
-            seller_id,
-            token_price,
-            trade_token_amount,
-            trade_date: new Date(trade_date),
+            tradeId,
+            estateId,
+            buyerId,
+            sellerId,
+            tokenPrice,
+            tradeTokenAmount,
+            tradeDate: new Date(tradeDate),
             status: 'PENDING'
         });
 
         const metadata = {
-            trade_id,
-            estate_id,
-            buyer_id,
-            seller_id,
-            token_price,
-            trade_date: new Date(trade_date).toISOString(),
+            tradeId,
+            estateId,
+            buyerId,
+            sellerId,
+            tokenPrice,
+            tradeDate: new Date(tradeDate).toISOString(),
         };
 
         try {
@@ -94,20 +95,26 @@ export async function processTransaction(payload) {
             const token = new ethers.Contract(contract.contract_address, tokenArtifact.abi, wallet);
 
             const buyer_balance = await token.balanceOf(buyer_wallet.wallet_address);
+            console.log('buyer_balance:', buyer_balance.toString());
         
-            if (buyer_balance < trade_token_amount) {
+            if (buyer_balance < tradeTokenAmount) {
                 throw new Error('구매자의 토큰 잔액이 부족합니다.');
             }
             
-            const amount = parseUnits(trade_token_amount.toString(), 18);
-            const data = ethers.encodeBytes32String(JSON.stringify(metadata));
+            const amount = parseUnits(tradeTokenAmount.toString(), 18);
+            const dataString = JSON.stringify(metadata);
+            const byteLength = Buffer.byteLength(dataString, 'utf8');
+            console.log('dataString:', dataString, '| byteLength:', byteLength);
+            const hash = keccak256(toUtf8Bytes(dataString));
+            console.log('metadata hash:', hash);
+            const data = hash;
             
             // #cantransfer 확인
             // if (!await token.isTransferable()) {
             //     await token.setTransferable(true);
             // }
 
-            const tx = await token.transfer(buyer_wallet.wallet_address, trade_token_amount, data);
+            const tx = await token.transferWithData(buyer_wallet.wallet_address, tradeTokenAmount, data);
             await tx.wait();
 
             console.log(`토큰 ${amount}개를 ${buyer_wallet.wallet_address}에게 전송 성공`);

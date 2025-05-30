@@ -121,9 +121,9 @@ export const handleKafkaMessage = async (message, handler) => {
 // 컨슈머 설정
 export const getConsumerConfig = (groupId) => ({
   groupId,
-  heartbeatInterval: 3000,
-  sessionTimeout: 10000,
-  maxWaitTimeInMs: 5000
+  heartbeatInterval: 10000,
+  sessionTimeout: 60000,
+  maxWaitTimeInMs: 10000
 });
 
 // 컨슈머 재연결 로직

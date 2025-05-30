@@ -11,39 +11,44 @@ import {
 
 // 코인 발행 검증 함수
 const validateCoinIssue = (payload) => {
-  validatePayload(payload, ['customer_id', 'chain_id', 'amount'], {
-    customer_id: (value) => validateString(value, 'customer_id'),
-    // chain_id: (value) => validateString(value, 'chain_id'),
-    estate_id: (value) => validateNumber(value, 'estate_id'),
+  validatePayload(payload, ['customerId', 'estateId', 'amount'], {
+    customerId: (value) => validateNumber(value, 'customerId'),
+    estateId: (value) => validateNumber(value, 'estateId'),
     amount: (value) => validateNumber(value, 'amount'),
     date: (value) => validateDate(value, 'date')
   });
 };
 
 async function consumeCoinIssue() {
+  console.log('청약(코인 발행) Consumer 그룹:', CONSUMER_GROUPS.COIN_ISSUER);
   const consumer = kafka.coinIssuer.consumer(getConsumerConfig(CONSUMER_GROUPS.COIN_ISSUER));
-  console.log('컨슈머 그룹:', CONSUMER_GROUPS.COIN_ISSUER);
-  
+
   try {
+    console.log('청약(코인 발행) Kafka 연결 시도...');
     await consumer.connect();
-    await consumer.subscribe({ topic: TOPICS.SUBSCRIPTION_CREATED, fromBeginning: false });
+    console.log('청약(코인 발행) Kafka 연결 성공');
+
+    console.log('청약(코인 발행) 토픽 구독 시도:', TOPICS.SUBSCRIPTION_CREATED);
+    await consumer.subscribe({ topic: TOPICS.SUBSCRIPTION_CREATED, fromBeginning: true });
+    console.log('청약(코인 발행) 토픽 구독 성공');
 
     await consumer.run({
       eachMessage: async ({ message }) => {
         await handleKafkaMessage(message, async (payload) => {
-          if (Array.isArray(payload.customer)) {
-            for (const c of payload.customer) {
+          console.log('Received payload:', payload);
+          if (Array.isArray(payload.subCustomer)) {
+            for (const c of payload.subCustomer) {
               try {
                 await issueCoin({
-                  customer_id: c.customer_id,
-                  estate_id: payload.estate_id,
-                  amount: c.trade_token_amount,
-                  token_price: payload.token_price,
+                  customer_id: c.customerId,
+                  estate_id: payload.estateId,
+                  amount: c.tradeTokenAmount,
+                  token_price: payload.tokenPrice,
                   date: new Date(),
                 });
-                console.log(`청약 완료. 유저 아이디 : ${c.customer_id}`);
+                console.log(`청약 완료. 유저 아이디 : ${c.customerId}`);
               } catch (err) {
-                console.error(`청약 실패. 유저 아이디 : ${c.customer_id}`, err);
+                console.error(`청약 실패. 유저 아이디 : ${c.customerId}`, err);
                 // 필요시 DLQ, 알림 등 추가
               }
             }
@@ -51,7 +56,7 @@ async function consumeCoinIssue() {
             // 단일 청약 메시지 처리
             validateCoinIssue(payload);
             await issueCoin(payload);
-            console.log(`청약 완료. 유저 아이디 : ${payload.customer_id}`);
+            console.log(`청약 완료. 유저 아이디 : ${payload.customerId}`);
           }
         });
       },
@@ -60,11 +65,11 @@ async function consumeCoinIssue() {
     // 종료 시그널 처리
     process.on('SIGTERM', async () => {
       try {
-        console.log('Disconnecting consumer...');
+        console.log('Disconnecting coin issue consumer...');
         await consumer.disconnect();
-        console.log('Consumer disconnected');
+        console.log('Coin issue consumer disconnected');
       } catch (e) {
-        console.error('Error during consumer disconnect:', e);
+        console.error('Error during coin issue consumer disconnect:', e);
       }
       process.exit(0);
     });

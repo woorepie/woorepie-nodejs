@@ -13,6 +13,7 @@ export const createKafkaInstance = (clientId) => {
 export const kafka = {
   userCreated: createKafkaInstance('wallet-generator'),
   transactionProcessor: createKafkaInstance('transaction-processor'),
+  coinIssuer: createKafkaInstance('coin-issuer'),
   dlqProducer: createKafkaInstance('dlq-producer'),
   notificationProducer: createKafkaInstance('notification-producer'),
   notificationConsumer: createKafkaInstance('notification-consumer')
@@ -22,13 +23,14 @@ export const kafka = {
 export const CONSUMER_GROUPS = {
   WALLET_GENERATOR: 'wallet-generator',
   TRANSACTION_PROCESSOR: 'transaction-processor',
-  NOTIFICATION: 'notification-group'
+  NOTIFICATION: 'notification-group',
+  COIN_ISSUER: 'coin-issuer'
 };
 
 // 토픽 이름 상수
 export const TOPICS = {
   USER_CREATED: 'customer.created',
   TRANSACTION_CREATED: 'transaction.created',
-  SUBSCRIPTION_CREATED: 'subscription.accepted',
+  SUBSCRIPTION_CREATED: 'subscription.accept',
   USER_NOTIFICATION: 'user.notification'
 }; 

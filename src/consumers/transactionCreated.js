@@ -12,17 +12,17 @@ import {
 // 트랜잭션 검증 함수
 const validateTransaction = (payload) => {
   validatePayload(payload, [
-    'estate_id',    // 매물 ID
-    'trade_id',     // 거래 ID
-    'buyer_id',     // 구매자 ID
-    'seller_id',    // 판매자 ID
-    'token_price',  // 토큰 가격
-    'trade_token_amount', // 거래 수량
-    'trade_date'    // 거래 일자
+    'estateId',    // 매물 ID
+    'tradeId',     // 거래 ID
+    'buyerId',     // 구매자 ID
+    'sellerId',    // 판매자 ID
+    'tokenPrice',  // 토큰 가격
+    'tradeTokenAmount', // 거래 수량
+    'tradeDate'    // 거래 일자
   ], {
-    token_price: (value) => validateNumber(value, 'token_price'),
-    trade_token_amount: (value) => validateNumber(value, 'trade_token_amount'),
-    trade_date: (value) => validateDate(value, 'trade_date')
+    tokenPrice: (value) => validateNumber(value, 'tokenPrice'),
+    tradeTokenAmount: (value) => validateNumber(value, 'tradeTokenAmount'),
+    tradeDate: (value) => validateDate(value, 'tradeDate')
   });
 };
 
@@ -37,13 +37,14 @@ async function consumeTransactionCreated() {
     await consumer.run({
       eachMessage: async ({ message }) => {
         await handleKafkaMessage(message, async (payload) => {
+          console.log('Received payload:', payload);
           // 페이로드 검증
           // validateTransaction(payload);
           
           // 트랜잭션 처리
-          console.log(`트랜잭션 처리 시작: estate_id=${payload.estate_id}, trade_id=${payload.trade_id}`);
+          console.log(`트랜잭션 처리 시작: estateId=${payload.estateId}, tradeId=${payload.tradeId}`);
           await processTransaction(payload);
-          console.log(`트랜잭션 처리 완료: estate_id=${payload.estate_id}, trade_id=${payload.trade_id}`);
+          console.log(`트랜잭션 처리 완료: estateId=${payload.estateId}, tradeId=${payload.tradeId}`);
         });
       },
     });
