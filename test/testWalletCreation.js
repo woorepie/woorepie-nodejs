@@ -23,7 +23,7 @@ async function createWalletForUser(userId) {
 async function main() {
     try {
         // MongoDB 연결
-        mongoose.connect(config.MONGODB_URI);
+        mongoose.connect(process.env.MONGODB_URI);
         console.log('MongoDB 연결 성공');
 
         // 사용자 입력을 받는 함수

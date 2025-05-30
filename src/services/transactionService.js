@@ -89,8 +89,8 @@ export async function processTransaction(payload) {
         };
 
         try {
-            console.log('config.AMOY_RPC_URL', config.AMOY_RPC_URL);
-            const provider = new ethers.JsonRpcProvider(config.AMOY_RPC_URL);
+            console.log('process.env.AMOY_RPC_URL', process.env.AMOY_RPC_URL);
+            const provider = new ethers.JsonRpcProvider(process.env.AMOY_RPC_URL);
             const wallet = new ethers.Wallet(seller_private_key, provider);
             const token = new ethers.Contract(contract.contract_address, tokenArtifact.abi, wallet);
 

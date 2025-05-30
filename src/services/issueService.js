@@ -53,8 +53,8 @@ export const issueCoin = async (payload) => {
     
 
     try {
-      const provider = new ethers.JsonRpcProvider(config.AMOY_RPC_URL);
-      const privateKey = config.PRIVATE_KEY;
+      const provider = new ethers.JsonRpcProvider(process.env.AMOY_RPC_URL);
+      const privateKey = process.env.PRIVATE_KEY;
       const wallet = new ethers.Wallet(privateKey, provider);
       const token = new ethers.Contract(tokenAddress, tokenArtifact.abi, wallet);
       const receiver = issueWallet.wallet_address;

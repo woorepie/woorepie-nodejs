@@ -1,7 +1,7 @@
 import config from '../src/config/env.js';
 import mongoose from 'mongoose';
 
-mongoose.connect(config.MONGODB_URI)
+mongoose.connect(process.env.MONGODB_URI)
     .then(() => {
         console.log('MongoDB 연결 성공');
         process.exit(0);

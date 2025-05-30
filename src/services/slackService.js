@@ -2,8 +2,8 @@ import axios from 'axios';
 import config from '../../src/config/env.js';
 
 // 환경 변수 확인
-console.log('Current NODE_ENV:', config.NODE_ENV);
-console.log('SLACK_WEBHOOK_URL:', config.SLACK_WEBHOOK_URL);
+console.log('Current NODE_ENV:', process.env.NODE_ENV);
+console.log('SLACK_WEBHOOK_URL:', process.env.SLACK_WEBHOOK_URL);
 
 // 체인 카테고리 정의
 const CHAIN_CATEGORIES = {
@@ -88,7 +88,7 @@ export const sendSlackNotification = async (notification) => {
       });
     }
 
-    await axios.post(config.SLACK_WEBHOOK_URL, message);
+    await axios.post(process.env.SLACK_WEBHOOK_URL, message);
     console.log(`Slack notification sent for user ${notification.userId}`);
   } catch (error) {
     console.error('Error sending Slack notification:', error);

@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "prod": "pm2 start ecosystem.config.js --env production",
+    "prod": "pm2 start ecosystem.process.env.js --env production",
     "stop": "pm2 stop woorepie-wallet",
     "restart": "pm2 restart woorepie-wallet",
     "logs": "pm2 logs woorepie-wallet",

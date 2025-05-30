@@ -4,7 +4,7 @@ import config from './env.js';
 // Kafka 인스턴스 생성 함수
 export const createKafkaInstance = (clientId) => {
   return new Kafka({
-    brokers: config.KAFKA_BROKER.split(','),
+    brokers: process.env.KAFKA_BROKER.split(','),
     clientId
   });
 };

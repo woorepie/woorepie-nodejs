@@ -5,7 +5,7 @@ import config from '../config/env.js';
 
 export const encryptKey = (privateKey) => {
   const algorithm = 'aes-256-cbc';
-  const key = crypto.scryptSync(config.ENCRYPTION_KEY || 'default-key', 'salt', 32);
+  const key = crypto.scryptSync(process.env.ENCRYPTION_KEY || 'default-key', 'salt', 32);
   const iv = crypto.randomBytes(16);
   
   const cipher = crypto.createCipheriv(algorithm, key, iv);
@@ -22,7 +22,7 @@ export const decryptKey = (encryptedKey) => {
     const [ivHex, encrypted] = parts;
 
     const algorithm = 'aes-256-cbc';
-    const key = crypto.scryptSync(config.ENCRYPTION_KEY || 'default-key', 'salt', 32);
+    const key = crypto.scryptSync(process.env.ENCRYPTION_KEY || 'default-key', 'salt', 32);
     
     // IV를 Buffer로 변환
     let iv = Buffer.from(ivHex, 'hex');

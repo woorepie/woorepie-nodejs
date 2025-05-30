@@ -50,8 +50,8 @@ export const issueCoin = async (payload) => {
 
     try {
       // 임시로 성공했다고 가정하고 상태 업데이트
-      const provider = new ethers.JsonRpcProvider(config.AMOY_RPC_URL);
-      const wallet = new ethers.Wallet(config.DEPLOYER_PRIVATE_KEY, provider);
+      const provider = new ethers.JsonRpcProvider(process.env.AMOY_RPC_URL);
+      const wallet = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
       const tokenAddress = contract_id;
       const token = new ethers.Contract(tokenAddress, tokenArtifact.abi, wallet);
       const receiver = wallet.address;
