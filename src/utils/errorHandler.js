@@ -38,6 +38,28 @@ export const validateEnum = (value, field, allowedValues) => {
   }
 };
 
+// 날짜 검증
+export const validateDate = (value, fieldName) => {
+  if (!value) {
+    throw new Error(`${fieldName}는 필수 값입니다.`);
+  }
+
+  let date;
+  if (value instanceof Date) {
+    date = value;
+  } else if (typeof value === 'string') {
+    date = new Date(value);
+  } else {
+    throw new Error(`${fieldName}는 유효한 날짜 형식이어야 합니다.`);
+  }
+
+  if (isNaN(date.getTime())) {
+    throw new Error(`${fieldName}는 유효한 날짜 형식이어야 합니다.`);
+  }
+
+  return date;
+};
+
 // 에러 알림 전송 함수
 const sendErrorNotification = async (topic, message, error, userId = 'unknown') => {
   try {
@@ -61,9 +83,8 @@ const sendErrorNotification = async (topic, message, error, userId = 'unknown') 
 };
 
 // Kafka 메시지 처리 래퍼
-export const handleKafkaMessage = async (message, handler) => {
+export const handleKafkaMessage = async ({ topic, partition, message }, handler) => {
   let payload;
-  const { topic, partition } = message;
   
   try {
     // 1. JSON 파싱
@@ -87,21 +108,27 @@ export const handleKafkaMessage = async (message, handler) => {
       partition
     });
     
-    // DLQ로 전송
-    await sendToDLQ(topic, message.value.toString(), error);
-    
-    // 에러 알림 전송
-    const userId = payload?.user_id || 'unknown';
-    await sendErrorNotification(topic, message.value.toString(), error, userId);
+    try {
+      // DLQ로 전송 (notification은 DLQ 처리 과정에서 필요할 때만 보냄)
+      await sendToDLQ(topic, message.value.toString(), error);
+    } catch (dlqError) {
+      // DLQ 전송 실패시 로그만 남김
+      console.error('Failed to send to DLQ:', {
+        originalError: error.message,
+        dlqError: dlqError.message,
+        topic,
+        payload: message.value.toString()
+      });
+    }
   }
 };
 
 // 컨슈머 설정
 export const getConsumerConfig = (groupId) => ({
   groupId,
-  heartbeatInterval: 3000,
-  sessionTimeout: 10000,
-  maxWaitTimeInMs: 5000
+  heartbeatInterval: 10000,
+  sessionTimeout: 60000,
+  maxWaitTimeInMs: 10000
 });
 
 // 컨슈머 재연결 로직

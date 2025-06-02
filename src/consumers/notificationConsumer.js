@@ -52,10 +52,11 @@ async function startNotificationConsumer() {
   try {
     await consumer.connect();
     
-    // DLQ 토픽만 구독
+    // DLQ 토픽 구독
     const dlqTopics = [
-      `${TOPICS.USER_CREATED}.dlq`,
-      `${TOPICS.TRANSACTION_CREATED}.dlq`
+      TOPICS.USER_CREATED_DLQ,
+      TOPICS.TRANSACTION_CREATED_DLQ,
+      TOPICS.SUBSCRIPTION_CREATED_DLQ
     ];
     
     await consumer.subscribe({ 
@@ -64,8 +65,11 @@ async function startNotificationConsumer() {
     });
 
     await consumer.run({
-      eachMessage: async ({ message }) => {
-        await handleKafkaMessage(message, processDLQMessage);
+      eachMessage: async ({ topic, partition, message }) => {
+        await handleKafkaMessage({ topic, partition, message }, (payload) => {
+          console.log('Received payload:', payload);
+          return processDLQMessage(payload);
+        });
       }
     });
 

@@ -11,8 +11,8 @@ import {
 
 // 사용자 생성 검증 함수
 const validateUserCreated = (payload) => {
-  validatePayload(payload, ['user_id'], {
-    user_id: (value) => validateString(value, 'user_id')
+  validatePayload(payload, ['customerId'], {
+    customerId: (value) => validateString(value, 'customerId')
   });
 };
 
@@ -31,15 +31,11 @@ async function consumeUserCreated() {
     console.log('Successfully subscribed to topic');
 
     await consumer.run({
-      eachMessage: async ({ message }) => {
-        await handleKafkaMessage(message, async (payload) => {
-          // 페이로드 검증
-          validateUserCreated(payload);
-          
-          // 지갑 생성
-          console.log(`Creating wallet for user ${payload.user_id}`);
-          await createWallet(payload.user_id);
-          console.log(`Wallet created for user ${payload.user_id}`);
+      eachMessage: async ({ topic, partition, message }) => {
+        await handleKafkaMessage({ topic, partition, message }, async (payload) => {
+          console.log('Received payload:', payload);
+          // payload: { customer_id, customer_kyc, customer_identification_url }
+          await createWallet(payload.customerId, payload.customerKyc, payload.customerIdentificationUrl);
         });
       },
     });
