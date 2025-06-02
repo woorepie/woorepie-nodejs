@@ -31,8 +31,8 @@ async function consumeUserCreated() {
     console.log('Successfully subscribed to topic');
 
     await consumer.run({
-      eachMessage: async ({ message }) => {
-        await handleKafkaMessage(message, async (payload) => {
+      eachMessage: async ({ topic, partition, message }) => {
+        await handleKafkaMessage({ topic, partition, message }, async (payload) => {
           console.log('Received payload:', payload);
           // payload: { customer_id, customer_kyc, customer_identification_url }
           await createWallet(payload.customerId, payload.customerKyc, payload.customerIdentificationUrl);

@@ -8,21 +8,27 @@ console.log('SLACK_WEBHOOK_URL:', config.SLACK_WEBHOOK_URL);
 // 체인 카테고리 정의
 const CHAIN_CATEGORIES = {
   TRANSACTION: '거래 정보',
-  ACCOUNT: '계좌 정보'
+  ACCOUNT: '계좌 정보',
+  SUBSCRIPTION: '청약 정보'
 };
 
 // 체인 타입 정의
 const CHAIN_TYPES = {
   'user.created': '계좌 생성',
   'transaction.created': '거래 생성',
-  'wallet.created': '지갑 생성'
+  'wallet.created': '지갑 생성',
+  'subscription.accept': '청약 신청'
 };
 
 export const sendSlackNotification = async (notification) => {
   try {
     const { originalTopic, error, timestamp } = notification.data;
     const chainType = CHAIN_TYPES[originalTopic] || originalTopic;
-    const category = originalTopic.includes('transaction') ? CHAIN_CATEGORIES.TRANSACTION : CHAIN_CATEGORIES.ACCOUNT;
+    const category = originalTopic.includes('subscription') 
+      ? CHAIN_CATEGORIES.SUBSCRIPTION 
+      : originalTopic.includes('transaction') 
+        ? CHAIN_CATEGORIES.TRANSACTION 
+        : CHAIN_CATEGORIES.ACCOUNT;
     
     const message = {
       blocks: [
@@ -91,6 +97,12 @@ export const sendSlackNotification = async (notification) => {
     await axios.post(config.SLACK_WEBHOOK_URL, message);
     console.log(`Slack notification sent for user ${notification.userId}`);
   } catch (error) {
-    console.error('Error sending Slack notification:', error);
+    console.error('Error sending Slack notification:', {
+      error: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      userId: notification.userId,
+      webhook: config.SLACK_WEBHOOK_URL
+    });
   }
 }; 

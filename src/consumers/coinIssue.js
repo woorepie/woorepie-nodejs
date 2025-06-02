@@ -11,11 +11,11 @@ import {
 
 // 코인 발행 검증 함수
 const validateCoinIssue = (payload) => {
-  validatePayload(payload, ['customerId', 'estateId', 'amount'], {
+  validatePayload(payload, ['customerId', 'estateId', 'tradeTokenAmount', 'tokenPrice'], {
     customerId: (value) => validateNumber(value, 'customerId'),
     estateId: (value) => validateNumber(value, 'estateId'),
-    amount: (value) => validateNumber(value, 'amount'),
-    date: (value) => validateDate(value, 'date')
+    tradeTokenAmount: (value) => validateNumber(value, 'tradeTokenAmount'),
+    tokenPrice: (value) => validateNumber(value, 'tokenPrice')
   });
 };
 
@@ -33,8 +33,8 @@ async function consumeCoinIssue() {
     console.log('청약(코인 발행) 토픽 구독 성공');
 
     await consumer.run({
-      eachMessage: async ({ message }) => {
-        await handleKafkaMessage(message, async (payload) => {
+      eachMessage: async ({ topic, partition, message }) => {
+        await handleKafkaMessage({ topic, partition, message }, async (payload) => {
           console.log('Received payload:', payload);
           if (Array.isArray(payload.subCustomer)) {
             for (const c of payload.subCustomer) {
@@ -55,7 +55,13 @@ async function consumeCoinIssue() {
           } else {
             // 단일 청약 메시지 처리
             validateCoinIssue(payload);
-            await issueCoin(payload);
+            await issueCoin({
+              customer_id: payload.customerId,
+              estate_id: payload.estateId,
+              amount: payload.tradeTokenAmount,
+              token_price: payload.tokenPrice,
+              date: new Date()
+            });
             console.log(`청약 완료. 유저 아이디 : ${payload.customerId}`);
           }
         });

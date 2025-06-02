@@ -14,6 +14,53 @@ const NON_RETRIABLE_ERRORS = [
   'Missing required field' // 필수 필드 누락
 ];
 
+// DLQ 토픽 매핑 함수
+function getDLQTopic(originalTopic) {
+  const dlqMapping = {
+    [TOPICS.USER_CREATED]: TOPICS.USER_CREATED_DLQ,
+    [TOPICS.TRANSACTION_CREATED]: TOPICS.TRANSACTION_CREATED_DLQ,
+    [TOPICS.SUBSCRIPTION_CREATED]: TOPICS.SUBSCRIPTION_CREATED_DLQ
+  };
+  
+  return dlqMapping[originalTopic] || `${originalTopic}.dlq`;
+}
+
+// DLQ 토픽 초기화 함수
+export const initializeDLQTopics = async () => {
+  const admin = kafka.dlqProducer.admin();
+  try {
+    await admin.connect();
+    
+    const requiredTopics = [
+      // DLQ 토픽들
+      TOPICS.USER_CREATED_DLQ,
+      TOPICS.TRANSACTION_CREATED_DLQ,
+      TOPICS.SUBSCRIPTION_CREATED_DLQ,
+      // 알림 토픽
+      TOPICS.USER_NOTIFICATION
+    ];
+
+    // 존재하지 않는 토픽만 생성
+    const existingTopics = await admin.listTopics();
+    const topicsToCreate = requiredTopics.filter(topic => !existingTopics.includes(topic));
+
+    if (topicsToCreate.length > 0) {
+      await admin.createTopics({
+        topics: topicsToCreate.map(topic => ({
+          topic,
+          numPartitions: 3,  // 파티션 수
+          replicationFactor: 1  // 복제 팩터
+        }))
+      });
+      console.log('토픽 생성 완료:', topicsToCreate);
+    }
+  } catch (error) {
+    console.error('토픽 초기화 중 오류 발생:', error);
+  } finally {
+    await admin.disconnect();
+  }
+};
+
 export const sendToDLQ = async (originalTopic, message, error, retryCount = 0) => {
   try {
     await producer.connect();
@@ -61,7 +108,8 @@ export const sendToDLQ = async (originalTopic, message, error, retryCount = 0) =
         }
       }, RETRY_DELAY);
     } else {
-      // 최대 재시도 횟수 초과
+      // 최대 재시도 횟수 초과시에만 알림 전송
+      console.log(`Max retries (${MAX_RETRIES}) exceeded for message in ${originalTopic}`);
       await sendErrorNotification(originalTopic, message, error, '최대 재시도 횟수 초과');
     }
   } catch (err) {
@@ -97,14 +145,4 @@ async function sendErrorNotification(originalTopic, message, error, reason) {
   } catch (notificationError) {
     console.error('Failed to send error notification:', notificationError);
   }
-}
-
-// DLQ 토픽 매핑 함수
-function getDLQTopic(originalTopic) {
-  const dlqMapping = {
-    [TOPICS.USER_CREATED]: `${TOPICS.USER_CREATED}.dlq`,
-    [TOPICS.TRANSACTION_CREATED]: `${TOPICS.TRANSACTION_CREATED}.dlq`
-  };
-  
-  return dlqMapping[originalTopic] || `${originalTopic}.dlq`;
 } 

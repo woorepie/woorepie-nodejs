@@ -35,8 +35,8 @@ async function consumeTransactionCreated() {
     await consumer.subscribe({ topic: TOPICS.TRANSACTION_CREATED, fromBeginning: false });
 
     await consumer.run({
-      eachMessage: async ({ message }) => {
-        await handleKafkaMessage(message, async (payload) => {
+      eachMessage: async ({ topic, partition, message }) => {
+        await handleKafkaMessage({ topic, partition, message }, async (payload) => {
           console.log('Received payload:', payload);
           // 페이로드 검증
           // validateTransaction(payload);

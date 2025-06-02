@@ -5,6 +5,8 @@ import mongoose from 'mongoose';
 import consumeUserCreated from './consumers/userCreated.js';
 import consumeTransactionCreated from './consumers/transactionCreated.js';
 import consumeCoinIssue from './consumers/coinIssue.js';
+import { initializeDLQTopics } from './producers/dlqProducer.js';
+import startNotificationConsumer from './consumers/notificationConsumer.js';
 
 
 /** 헬스체크용 HTTP 서버 */
@@ -30,6 +32,11 @@ async function main() {
         await mongoose.connect(config.MONGODB_URI);
         console.log('MongoDB 연결 성공');
 
+        // DLQ 토픽 초기화
+        console.log('DLQ 토픽 초기화 시작...');
+        await initializeDLQTopics();
+        console.log('DLQ 토픽 초기화 완료');
+
         startHealthServer();
 
         // 지갑 생성 Consumer 시작 (순서성 불필요)
@@ -43,6 +50,10 @@ async function main() {
         // 청약(코인 발행) Consumer 시작
         console.log('청약(코인 발행) Consumer 시작...');
         await consumeCoinIssue();
+
+        // 알림 Consumer 시작
+        console.log('알림 Consumer 시작...');
+        await startNotificationConsumer();
         
         // 프로그램이 계속 실행되도록 유지
         process.on('SIGINT', async () => {

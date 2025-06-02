@@ -83,9 +83,8 @@ const sendErrorNotification = async (topic, message, error, userId = 'unknown') 
 };
 
 // Kafka 메시지 처리 래퍼
-export const handleKafkaMessage = async (message, handler) => {
+export const handleKafkaMessage = async ({ topic, partition, message }, handler) => {
   let payload;
-  const { topic, partition } = message;
   
   try {
     // 1. JSON 파싱
@@ -109,12 +108,18 @@ export const handleKafkaMessage = async (message, handler) => {
       partition
     });
     
-    // DLQ로 전송
-    await sendToDLQ(topic, message.value.toString(), error);
-    
-    // 에러 알림 전송
-    const customer_id = payload?.customer_id || 'unknown';
-    await sendErrorNotification(topic, message.value.toString(), error, customer_id);
+    try {
+      // DLQ로 전송 (notification은 DLQ 처리 과정에서 필요할 때만 보냄)
+      await sendToDLQ(topic, message.value.toString(), error);
+    } catch (dlqError) {
+      // DLQ 전송 실패시 로그만 남김
+      console.error('Failed to send to DLQ:', {
+        originalError: error.message,
+        dlqError: dlqError.message,
+        topic,
+        payload: message.value.toString()
+      });
+    }
   }
 };
 

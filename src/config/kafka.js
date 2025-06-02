@@ -5,7 +5,8 @@ import config from './env.js';
 export const createKafkaInstance = (clientId) => {
   return new Kafka({
     brokers: config.KAFKA_BROKER.split(','),
-    clientId
+    clientId,
+    allowAutoTopicCreation: true  // 토픽 자동 생성 허용
   });
 };
 
@@ -32,5 +33,9 @@ export const TOPICS = {
   USER_CREATED: 'customer.created',
   TRANSACTION_CREATED: 'transaction.created',
   SUBSCRIPTION_CREATED: 'subscription.accept',
-  USER_NOTIFICATION: 'user.notification'
+  USER_NOTIFICATION: 'user.notification',
+  // DLQ 토픽들
+  USER_CREATED_DLQ: 'customer.created.dlq',
+  TRANSACTION_CREATED_DLQ: 'transaction.created.dlq',
+  SUBSCRIPTION_CREATED_DLQ: 'subscription.accept.dlq'
 }; 
