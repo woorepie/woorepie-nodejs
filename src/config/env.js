@@ -33,5 +33,6 @@ export default {
     KAFKA_BROKER: process.env.KAFKA_BROKER,
     AMOY_RPC_URL: process.env.AMOY_RPC_URL,
     PRIVATE_KEY: process.env.PRIVATE_KEY,
-    ENCRYPTION_KEY: process.env.ENCRYPTION_KEY
+    ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
+    CHAIN_REGISTRY_ADDRESS: process.env.REGICHAIN
 } 
