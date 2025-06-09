@@ -2,6 +2,7 @@ import { sendNotification } from './notificationProducer.js';
 import { kafka, TOPICS } from '../config/kafka.js';
 
 const producer = kafka.dlqProducer.producer();
+let isConnected = false;
 
 // 재시도 설정
 const MAX_RETRIES = 10;
@@ -61,6 +62,19 @@ export const initializeDLQTopics = async () => {
   }
 };
 
+// producer 연결 관리
+async function ensureConnected() {
+  if (!isConnected) {
+    try {
+      await producer.connect();
+      isConnected = true;
+    } catch (error) {
+      console.error('Failed to connect DLQ producer:', error);
+      throw error;
+    }
+  }
+}
+
 export const sendToDLQ = async (originalTopic, message, error, retryCount = 0) => {
   try {
     await producer.connect();
@@ -88,7 +102,6 @@ export const sendToDLQ = async (originalTopic, message, error, retryCount = 0) =
 
     if (isNonRetriable) {
       console.log(`Non-retriable error detected: ${error.message}`);
-      // 재시도 불가능한 에러는 바로 알림 전송
       await sendErrorNotification(originalTopic, message, error, '복구 불가능한 오류');
       return;
     }
@@ -98,17 +111,13 @@ export const sendToDLQ = async (originalTopic, message, error, retryCount = 0) =
       console.log(`Message sent to DLQ: ${dlqTopic}, Retry count: ${retryCount}`);
       setTimeout(async () => {
         try {
-          await producer.send({
-            topic: originalTopic,
-            messages: [{ value: message }]
-          });
-          console.log(`Retry attempt ${retryCount + 1} for message in ${originalTopic}`);
+          // DLQ로 다시 전송 (retryCount 증가)
+          await sendToDLQ(originalTopic, message, error, retryCount + 1);
         } catch (retryError) {
-          await sendToDLQ(originalTopic, message, retryError, retryCount + 1);
+          console.error('Failed to retry DLQ:', retryError);
         }
       }, RETRY_DELAY);
     } else {
-      // 최대 재시도 횟수 초과시에만 알림 전송
       console.log(`Max retries (${MAX_RETRIES}) exceeded for message in ${originalTopic}`);
       await sendErrorNotification(originalTopic, message, error, '최대 재시도 횟수 초과');
     }
@@ -145,4 +154,16 @@ async function sendErrorNotification(originalTopic, message, error, reason) {
   } catch (notificationError) {
     console.error('Failed to send error notification:', notificationError);
   }
-} 
+}
+
+// 종료 시 producer 연결 해제
+process.on('SIGTERM', async () => {
+  try {
+    if (isConnected) {
+      await producer.disconnect();
+      isConnected = false;
+    }
+  } catch (e) {
+    console.error('Error during DLQ producer disconnect:', e);
+  }
+}); 

@@ -2,10 +2,13 @@
 import crypto from 'crypto';
 import config from '../config/env.js';
 
-
 export const encryptKey = (privateKey) => {
+  if (!config.ENCRYPTION_KEY) {
+    throw new Error('ENCRYPTION_KEY must be set in environment variables');
+  }
+
   const algorithm = 'aes-256-cbc';
-  const key = crypto.scryptSync(config.ENCRYPTION_KEY || 'default-key', 'salt', 32);
+  const key = crypto.scryptSync(config.ENCRYPTION_KEY, 'salt', 32);
   const iv = crypto.randomBytes(16);
   
   const cipher = crypto.createCipheriv(algorithm, key, iv);
@@ -16,17 +19,20 @@ export const encryptKey = (privateKey) => {
 };
 
 export const decryptKey = (encryptedKey) => {
+  if (!config.ENCRYPTION_KEY) {
+    throw new Error('ENCRYPTION_KEY must be set in environment variables');
+  }
+
   try {
     // iv와 encrypted 데이터 분리
     const parts = encryptedKey.split(':');
     const [ivHex, encrypted] = parts;
 
     const algorithm = 'aes-256-cbc';
-    const key = crypto.scryptSync(config.ENCRYPTION_KEY || 'default-key', 'salt', 32);
+    const key = crypto.scryptSync(config.ENCRYPTION_KEY, 'salt', 32);
     
     // IV를 Buffer로 변환
     let iv = Buffer.from(ivHex, 'hex');
-
 
     // 복호화 시도
     const decipher = crypto.createDecipheriv(algorithm, key, iv);
