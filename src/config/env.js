@@ -35,5 +35,5 @@ export default {
     PRIVATE_KEY: process.env.PRIVATE_KEY,
     ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
     DEPLOYER_PRIVATE_KEY: process.env.DEPLOYER_PRIVATE_KEY,
-    CHAIN_REGISTRY_ADDRESS: process.env.REGICHAIN
+    CHAIN_REGISTRY_ADDRESS: process.env.CHAIN_REGISTRY_ADDRESS || process.env.REGICHAIN
 } 

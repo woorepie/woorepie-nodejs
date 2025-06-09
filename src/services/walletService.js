@@ -6,6 +6,13 @@ import chainRegistryArtifact from "../../artifacts/ChainRegistry.json" with { ty
 
 export const createWallet = async (customerId, customerKyc, customerIdentificationUrl) => {
   try {
+    // 환경변수 디버깅
+    // console.log('=== Config Debug ===');
+    // console.log('AMOY_RPC_URL:', config.AMOY_RPC_URL);
+    // console.log('DEPLOYER_PRIVATE_KEY exists:', !!config.DEPLOYER_PRIVATE_KEY);
+    // console.log('CHAIN_REGISTRY_ADDRESS:', config.CHAIN_REGISTRY_ADDRESS);
+    // console.log('==================');
+    
     // 1. 새 지갑 생성
     const wallet = Wallet.createRandom();
     const encryptedKey = encryptKey(wallet.privateKey);
