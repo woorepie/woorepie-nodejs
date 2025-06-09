@@ -13,7 +13,14 @@
     "test:slack": " node test/testSlackNotification.js",
     "test:slack:dev": "node test/testSlackNotification.js",
     "test:slack:test": "node test/testSlackNotification.js",
-    "test:slack:prod": "node test/testSlackNotification.js"
+    "test:slack:prod": "node test/testSlackNotification.js",
+    "test:wallet": "node test/testWalletCreation.js",
+    "test:wallet:dev": "NODE_ENV=development node test/testWalletCreation.js",
+    "test:wallet:prod": "NODE_ENV=production node test/testWalletCreation.js",
+    "migrate:encryption": "node scripts/migrateEncryption.js",
+    "migrate:encryption:dev": "NODE_ENV=development node scripts/migrateEncryption.js",
+    "migrate:encryption:prod": "NODE_ENV=production node scripts/migrateEncryption.js",
+    "encrypt": "node scripts/encryptPrivateKey.js"
   },
   "repository": {
     "type": "git",
@@ -28,9 +35,12 @@
   },
   "homepage": "https://github.com/woorepie/woorepie-nodejs#readme",
   "dependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/contracts": "^5.3.0",
     "axios": "^1.9.0",
     "dotenv": "^16.5.0",
     "ethers": "^6.13.7",
+    "hardhat": "^2.24.1",
     "kafkajs": "^2.2.4",
     "mongoose": "^8.14.1"
   },

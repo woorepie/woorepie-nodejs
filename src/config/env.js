@@ -32,5 +32,8 @@ export default {
     MONGODB_URI: process.env.MONGODB_URI,
     KAFKA_BROKER: process.env.KAFKA_BROKER,
     AMOY_RPC_URL: process.env.AMOY_RPC_URL,
-    PRIVATE_KEY: process.env.PRIVATE_KEY
+    PRIVATE_KEY: process.env.PRIVATE_KEY,
+    ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
+    DEPLOYER_PRIVATE_KEY: process.env.DEPLOYER_PRIVATE_KEY,
+    CHAIN_REGISTRY_ADDRESS: process.env.CHAIN_REGISTRY_ADDRESS || process.env.REGICHAIN
 } 

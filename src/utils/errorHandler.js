@@ -92,8 +92,8 @@ export const handleKafkaMessage = async ({ topic, partition, message }, handler)
       payload = JSON.parse(message.value.toString());
     } catch (parseError) {
       console.error('Invalid JSON message received:', message.value.toString());
+      // JSON 파싱 에러는 복구 불가능한 에러이므로 바로 DLQ로 전송
       await sendToDLQ(topic, message.value.toString(), new Error('Invalid JSON format'));
-      await sendErrorNotification(topic, message.value.toString(), new Error('Invalid JSON format'));
       return;
     }
 
@@ -101,6 +101,7 @@ export const handleKafkaMessage = async ({ topic, partition, message }, handler)
     await handler(payload);
     
   } catch (error) {
+    // 비즈니스 로직 에러 처리
     console.error('Error processing message:', {
       error: error.message,
       payload: payload || 'Invalid JSON',
@@ -108,18 +109,8 @@ export const handleKafkaMessage = async ({ topic, partition, message }, handler)
       partition
     });
     
-    try {
-      // DLQ로 전송 (notification은 DLQ 처리 과정에서 필요할 때만 보냄)
-      await sendToDLQ(topic, message.value.toString(), error);
-    } catch (dlqError) {
-      // DLQ 전송 실패시 로그만 남김
-      console.error('Failed to send to DLQ:', {
-        originalError: error.message,
-        dlqError: dlqError.message,
-        topic,
-        payload: message.value.toString()
-      });
-    }
+    // DLQ로 전송 (notification은 DLQ 처리 과정에서 필요할 때만 보냄)
+    await sendToDLQ(topic, message.value.toString(), error);
   }
 };
 

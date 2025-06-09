@@ -24,28 +24,40 @@ const processDLQMessage = async (payload) => {
       error: payload.error,
       timestamp: payload.timestamp,
       stack: payload.stack,
-      originalMessage: payload.originalMessage
+      originalMessage: payload.originalMessage,
+      retryCount: payload.retryCount
     },
     isRead: false,
     createdAt: new Date()
   });
 
-  // Slack으로 알림 전송
-  await sendSlackNotification({
-    userId: payload.userId || 'unknown',
-    type: 'ERROR',
-    title: '메시지 처리 실패',
-    content: `토픽 ${payload.originalTopic}의 메시지 처리가 실패했습니다.`,
-    data: {
-      originalTopic: payload.originalTopic,
-      error: payload.error,
-      timestamp: payload.timestamp,
-      stack: payload.stack,
-      originalMessage: payload.originalMessage
-    }
-  });
+  // 최대 재시도 횟수를 초과했거나 복구 불가능한 에러일 때만 슬랙 알림 전송
+  const MAX_RETRIES = 10;  // dlqProducer.js와 동일한 값 사용
+  const NON_RETRIABLE_ERRORS = ['SyntaxError', 'Invalid JSON format', 'Missing required field'];
+  
+  const isNonRetriable = NON_RETRIABLE_ERRORS.some(errorType => 
+    payload.error.includes(errorType)
+  );
 
-  console.log(`DLQ notification processed for topic ${payload.originalTopic}`);
+  if (payload.retryCount >= MAX_RETRIES || isNonRetriable) {
+    // Slack으로 알림 전송
+    await sendSlackNotification({
+      userId: payload.userId || 'unknown',
+      type: 'ERROR',
+      title: '메시지 처리 실패',
+      content: `토픽 ${payload.originalTopic}의 메시지 처리가 실패했습니다.`,
+      data: {
+        originalTopic: payload.originalTopic,
+        error: payload.error,
+        timestamp: payload.timestamp,
+        stack: payload.stack,
+        originalMessage: payload.originalMessage,
+        retryCount: payload.retryCount
+      }
+    });
+  }
+
+  console.log(`DLQ notification processed for topic ${payload.originalTopic} (retry: ${payload.retryCount})`);
 };
 
 async function startNotificationConsumer() {
