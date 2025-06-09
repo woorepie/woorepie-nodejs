@@ -6,8 +6,6 @@ import chainRegistryArtifact from "../../artifacts/ChainRegistry.json" with { ty
 
 export const createWallet = async (customerId, customerKyc, customerIdentificationUrl) => {
   try {
-    console.log(`Starting wallet creation for customer ${customerId}`);
-    
     // 1. 새 지갑 생성
     const wallet = Wallet.createRandom();
     const encryptedKey = encryptKey(wallet.privateKey);
@@ -17,13 +15,8 @@ export const createWallet = async (customerId, customerKyc, customerIdentificati
     console.log(`Wallet mnemonic for customer ${customerId}: ${wallet.mnemonic.phrase}`);
 
     // 2. ChainRegistry에 KYC 등록
-    console.log(`Connecting to provider: ${config.AMOY_RPC_URL}`);
     const provider = new ethers.JsonRpcProvider(config.AMOY_RPC_URL);
-    
-    console.log(`Using deployer key: ${config.DEPLOYER_PRIVATE_KEY ? 'Set' : 'Not set'}`);
     const adminWallet = new ethers.Wallet(config.DEPLOYER_PRIVATE_KEY, provider);
-    
-    console.log(`Using ChainRegistry address: ${config.CHAIN_REGISTRY_ADDRESS}`);
     const chainRegistry = new ethers.Contract(
       config.CHAIN_REGISTRY_ADDRESS, 
       chainRegistryArtifact.abi, 
@@ -37,11 +30,26 @@ export const createWallet = async (customerId, customerKyc, customerIdentificati
 
     console.log(`Registering KYC for customer ${customerId}, wallet: ${wallet.address}`);
 
-    // ChainRegistry에 KYC 등록
-    const tx = await chainRegistry.verifyIdentityDirect(
+    // ChainRegistry에 KYC 등록 (사용자 원래 방식)
+    const encoded = ethers.solidityPackedKeccak256(
+      ['address', 'bytes32', 'uint256'],
+      [wallet.address, verificationHash, validityPeriod]
+    );
+    
+    const prefix = "\x19Ethereum Signed Message:\n32";
+    const prefixedMessage = ethers.concat([
+      ethers.toUtf8Bytes(prefix),
+      ethers.getBytes(encoded)
+    ]);
+    
+    const hash = ethers.keccak256(prefixedMessage);
+    const signature = await adminWallet.signingKey.sign(hash).serialized;
+    
+    const tx = await chainRegistry.verifyIdentity(
       wallet.address,
-      verificationHash,
-      validityPeriod
+      hash,
+      validityPeriod,
+      signature
     );
 
     console.log(`KYC registration tx: ${tx.hash}`);
@@ -60,17 +68,7 @@ export const createWallet = async (customerId, customerKyc, customerIdentificati
     console.log(`✅ Wallet saved to database for customer ${customerId}`);
 
   } catch (error) {
-    console.error(`❌ Error creating wallet for customer ${customerId}:`, error.message);
-    console.error(`❌ Stack trace:`, error.stack);
-    
-    // 구체적인 에러 정보 로깅
-    if (error.code) {
-      console.error(`❌ Error code: ${error.code}`);
-    }
-    if (error.reason) {
-      console.error(`❌ Error reason: ${error.reason}`);
-    }
-    
+    console.error(`❌ Error creating wallet for customer ${customerId}:`, error);
     throw error;
   }
 };
