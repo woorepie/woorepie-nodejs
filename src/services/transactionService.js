@@ -8,6 +8,20 @@ import config from '../config/env.js';
 import tokenArtifact from "../../artifacts/WooreToken.json" with { type: "json" };
 import TransferModel from '../models/transfer.js';
 import { keccak256, toUtf8Bytes } from 'ethers';
+
+// Java LocalDateTime 배열을 JavaScript Date로 변환
+function convertJavaDateToJS(javaDate) {
+  if (Array.isArray(javaDate) && javaDate.length >= 6) {
+    // [년, 월, 일, 시, 분, 초, 나노초]
+    const [year, month, day, hour, minute, second, nano = 0] = javaDate;
+    // JavaScript에서 월은 0부터 시작하므로 1을 빼야 함
+    // 나노초를 밀리초로 변환 (나노초 / 1,000,000)
+    const milliseconds = Math.floor(nano / 1000000);
+    return new Date(year, month - 1, day, hour, minute, second, milliseconds);
+  }
+  // 이미 Date 객체이거나 문자열인 경우
+  return new Date(javaDate);
+}
 /*
 	estate_id : ???,
 	trade_id : ???,
@@ -68,6 +82,11 @@ export async function processTransaction(payload) {
 
         const seller_private_key = decryptKey(seller_wallet.encrypted_key);
   
+        // 날짜 변환
+        const convertedTradeDate = convertJavaDateToJS(tradeDate);
+        console.log('Original tradeDate:', tradeDate);
+        console.log('Converted tradeDate:', convertedTradeDate);
+
         const transfer = await TransferModel.create({
             tradeId,
             estateId,
@@ -75,7 +94,7 @@ export async function processTransaction(payload) {
             sellerId,
             tokenPrice,
             tradeTokenAmount,
-            tradeDate: new Date(tradeDate),
+            tradeDate: convertedTradeDate,
             status: 'PENDING'
         });
 
@@ -85,7 +104,7 @@ export async function processTransaction(payload) {
             buyerId,
             sellerId,
             tokenPrice,
-            tradeDate: new Date(tradeDate).toISOString(),
+            tradeDate: convertedTradeDate.toISOString(),
         };
 
         try {
