@@ -22,7 +22,7 @@ const CHAIN_TYPES = {
 
 export const sendSlackNotification = async (notification) => {
   try {
-    const { originalTopic, error, timestamp } = notification.data;
+    const { originalTopic, error, timestamp, customerId } = notification.data;
     const chainType = CHAIN_TYPES[originalTopic] || originalTopic;
     const category = originalTopic.includes('subscription') 
       ? CHAIN_CATEGORIES.SUBSCRIPTION 
@@ -65,7 +65,7 @@ export const sendSlackNotification = async (notification) => {
           elements: [
             {
               type: "mrkdwn",
-              text: `*User ID:* ${notification.userId}`
+              text: `*Customer ID:* ${customerId || 'unknown'}`
             }
           ]
         }
@@ -95,13 +95,13 @@ export const sendSlackNotification = async (notification) => {
     }
 
     await axios.post(config.SLACK_WEBHOOK_URL, message);
-    console.log(`Slack notification sent for user ${notification.userId}`);
+    console.log(`Slack notification sent for customer ${customerId || 'unknown'}`);
   } catch (error) {
     console.error('Error sending Slack notification:', {
       error: error.message,
       response: error.response?.data,
       status: error.response?.status,
-      userId: notification.userId,
+      customerId: customerId || 'unknown',
       webhook: config.SLACK_WEBHOOK_URL
     });
   }
